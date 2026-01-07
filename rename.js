@@ -102,11 +102,23 @@ function simplify(cc) {
   return str;
 }
 
+// 匹配倍率的正则表达式，如 0.5x, 0.5X, 0.5倍, x0.5, X0.5 等
+const rateRegex = /(\d+\.?\d*)\s*[xX倍]|[xX]\s*(\d+\.?\d*)/;
+
 // 主函数
 function operator(proxies) {
   proxies.map((res) => {
     const resultArray = [airport];
-    var matched = false
+    var matched = false;
+
+    // 检测倍率
+    const rateMatch = res.name.match(rateRegex);
+    let rate = null;
+    if (rateMatch) {
+      const rateValue = rateMatch[1] || rateMatch[2];
+      rate = rateValue + 'x';
+    }
+
     for (const elem of Object.keys(countries)) {
       if (simplify(res.name).indexOf(elem) !== -1) {
         countries[elem][1] += 1;
@@ -116,7 +128,7 @@ function operator(proxies) {
           resultArray.push(countries[elem][0], countries[elem][1].toString().padStart(autofill, '0'));
         }
         // console.log(resultArray);
-        matched = true
+        matched = true;
         break;
       };
     };
@@ -128,6 +140,12 @@ function operator(proxies) {
         resultArray.splice(2, 0, others[elem]);
       }
     });
+
+    // 将倍率追加到末尾
+    if (rate) {
+      resultArray.push(rate);
+    }
+
     res.name = resultArray.join(' ');
   });
   if ($arguments.del1) {
